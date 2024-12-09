@@ -8,6 +8,11 @@ export const Countries = () => {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [error, setError] = useState(null);
 
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearch(value);
+  };
+
   const api = 'https://restcountries.com/v3.1/all';
 
   // Debounce search input
@@ -19,6 +24,7 @@ export const Countries = () => {
   }, [search]);
 
   // Fetch countries
+  // Update the useEffect for API calls
   useEffect(() => {
     const fetchCountries = async () => {
       try {
@@ -26,39 +32,35 @@ export const Countries = () => {
           const response = await fetch(
             `https://restcountries.com/v3.1/name/${debouncedSearch}`
           );
-          if (response.status === 200) {
-            const data = await response.json();
+          const data = await response.json();
+          if (response.ok) {
             const matchedCountries = data.filter((country) =>
               country.name.common
                 .toLowerCase()
                 .includes(debouncedSearch.toLowerCase())
             );
             setFilteredCountries(matchedCountries);
-            setError(null);
           } else {
             setFilteredCountries([]);
-            setError('No countries found');
           }
         } else {
           const response = await fetch(api);
-          if (response.status === 200) {
-            const data = await response.json();
+          const data = await response.json();
+          if (response.ok) {
             setCountries(data);
             setFilteredCountries([]);
-            setError(null);
           }
         }
       } catch (err) {
         console.error('Error fetching countries:', err);
-        setError('Error fetching countries');
+        setFilteredCountries([]);
       }
     };
 
     fetchCountries();
   }, [debouncedSearch]);
 
-  const displayedCountries =
-    filteredCountries.length > 0 ? filteredCountries : countries;
+  const displayedCountries = search ? filteredCountries : countries;
 
   return (
     <div className='countries-container'>
@@ -76,7 +78,7 @@ export const Countries = () => {
           type='text'
           style={{ width: '40%', padding: '1em' }}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearch}
           placeholder='Search for Countries'
           data-testid='country-search'
         />

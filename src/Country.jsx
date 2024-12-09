@@ -15,14 +15,16 @@ export const Country = ({ flag, name, abbr }) => {
         width: '200px',
       }}
       data-country={name}
-      data-testid={`country-card-${abbr}`}
     >
       <img
         src={flag}
         alt={`Flag of ${name}`}
         height={100}
         width={100}
-        loading='lazy'
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = 'placeholder-flag.png';
+        }}
       />
       <h2>{name}</h2>
     </div>
