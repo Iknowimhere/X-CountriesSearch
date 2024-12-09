@@ -2,54 +2,50 @@ import { useEffect, useState } from 'react';
 import { Country } from './Country';
 
 export const Countries = () => {
-  let [countries, setCountries] = useState([]);
-  let [search, setSearch] = useState('')
-  let [filteredCountries, setFilteredCountries] = useState([])
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  let api = 'https://restcountries.com/v3.1/all';
-  let filteredCountriesApi = `https://restcountries.com/v3.1/name/${search}`;
+  const [countries, setCountries] = useState([]);
+  const [search, setSearch] = useState('');
+  const [filteredCountries, setFilteredCountries] = useState([]);
+  
+  const api = 'https://restcountries.com/v3.1/all';
+  const filteredCountriesApi = `https://restcountries.com/v3.1/name/${search}`;
 
+  // Fetching countries when the component loads or when search changes
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 500); // Adjust debounce delay as needed
-    return () => clearTimeout(timer);
-  }, [search]);
-
-
-  useEffect(() => {
-
-
-    // Choose the appropriate URL based on the search term
-    const url = debouncedSearch ? filteredCountriesApi : api;
-
-
-    fetch(url)
-      .then((res) => {
-        if (!res.ok && !res.status === 200) {
-          throw new Error('Network response was not ok');
-        }
-        return res.json()
-      })
-      .then((data) => {
-        if (debouncedSearch) {
-          const matchedCountries = data.filter((country) => country.name.common.toLowerCase().includes(debouncedSearch.toLowerCase()));
-          setFilteredCountries(matchedCountries)
-        } else {
-          setCountries(data)
-        }
-      }).catch((err) => {
-        console.log('Error fetching filtered Countries', err)
-      })
-  }, [debouncedSearch]);
-
-  const countriesToDisplay = filteredCountries.length > 0 ? filteredCountries : countries;
+    if (search.length > 0) {
+      // Fetch countries based on search query
+      fetch(filteredCountriesApi)
+        .then((res) => res.json())
+        .then((data) => setFilteredCountries(data))
+        .catch((err) => {
+          console.error("Error fetching countries:", err);
+          // You can add additional error state handling if necessary
+        });
+    } else {
+      // Fetch all countries if no search term
+      fetch(api)
+        .then((res) => res.json())
+        .then((data) => setCountries(data))
+        .catch((err) => {
+          console.error("Error fetching countries:", err);
+          // You can add additional error state handling if necessary
+        });
+    }
+  }, [search]); // Dependency on search state
 
   return (
     <div className='countries-container'>
+      {/* Search input field */}
       <div className="search" style={{ margin: '2em 0', width: '100%', padding: '1em 0', display: 'flex', justifyContent: 'center' }}>
-        <input type="text" style={{ width: '40%', padding: '1em' }} name="" id="" value={search} onChange={(e) => setSearch(e.target.value)} placeholder='Search for Countries' />
+        <input
+          type="text"
+          style={{ width: '40%', padding: '1em' }}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder='Search for Countries'
+        />
       </div>
+
+      {/* Displaying the countries or filtered countries */}
       <div
         style={{
           display: 'flex',
@@ -60,7 +56,7 @@ export const Countries = () => {
           textAlign: 'center',
         }}
       >
-        {countriesToDisplay?.map((country) => (
+        {(filteredCountries.length > 0 ? filteredCountries : countries).map((country) => (
           <Country
             key={country.name.common}
             flag={country.flags.svg}

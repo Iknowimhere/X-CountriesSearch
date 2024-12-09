@@ -15,7 +15,7 @@ export const Country = ({ flag, name, abbr }) => {
       }}
       className="countryCard"
     >
-      <img src={flag} alt={abbr} height={100} width={100} />
+      <img src={flag} alt={`Flag of ${name}`} height={100} width={100} />
       <h2>{name}</h2>
     </div>
   );
