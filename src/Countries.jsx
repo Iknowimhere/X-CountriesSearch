@@ -1,115 +1,84 @@
-import { useEffect, useState } from 'react';
-import { Country } from './Country';
+import React, { useEffect, useState } from 'react';
+
+const CountryCard = ({ name, flag }) => (
+  <div
+    className='countryCard'
+    style={{ border: '1px solid #ccc', padding: '1em', textAlign: 'center' }}
+  >
+    <img
+      src={flag}
+      alt={`${name} flag`}
+      style={{ width: '100px', height: 'auto' }}
+    />
+    <h3>{name}</h3>
+  </div>
+);
 
 export const Countries = () => {
   const [countries, setCountries] = useState([]);
-  const [search, setSearch] = useState('');
   const [filteredCountries, setFilteredCountries] = useState([]);
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const handleSearch = (e) => {
-    const value = e.target.value;
-    setSearch(value);
-  };
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search.trim());
-    }, 500); // Debounce for user input
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  useEffect(() => {
-    const fetchCountries = async () => {
-      setIsLoading(true);
+    const fetchAllCountries = async () => {
       try {
-        let response;
-        if (debouncedSearch) {
-          response = await fetch(
-            `https://restcountries.com/v3.1/name/${debouncedSearch}`
-          );
-          if (response.ok) {
-            const data = await response.json();
-            console.log('Search Results:', data); // Debugging log
-            setFilteredCountries(data.slice(0, 3)); // Limit to 3 results
-          } else {
-            setFilteredCountries([]);
-          }
-        } else {
-          response = await fetch('https://restcountries.com/v3.1/all');
-          if (response.ok) {
-            const data = await response.json();
-            console.log('All Countries:', data); // Debugging log
-            setCountries(data);
-            setFilteredCountries(data); // Display all countries by default
-          } else {
-            throw new Error('Failed to fetch countries');
-          }
-        }
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching countries:', err);
-        setError(err.message);
-        setFilteredCountries([]);
-      } finally {
-        setIsLoading(false);
+        const response = await fetch('https://restcountries.com/v3.1/all');
+        const data = await response.json();
+        setCountries(data);
+        setFilteredCountries(data); // Initially display all countries
+      } catch (error) {
+        console.error('Error fetching countries:', error);
       }
     };
 
-    fetchCountries();
-  }, [debouncedSearch]);
+    fetchAllCountries();
+  }, []);
+
+  const handleSearch = (event) => {
+    const searchValue = event.target.value.toLowerCase();
+    setSearch(searchValue);
+
+    if (searchValue) {
+      const filtered = countries.filter((country) =>
+        country.name.common.toLowerCase().includes(searchValue)
+      );
+      setFilteredCountries(filtered.slice(0, 3)); // Show max 3 results
+    } else {
+      setFilteredCountries(countries); // Show all countries if search is cleared
+    }
+  };
 
   return (
-    <div className='countries-container'>
-      <div
-        className='search'
+    <div>
+      <input
+        type='text'
+        placeholder='Search for Countries'
+        value={search}
+        onChange={handleSearch}
         style={{
-          margin: '2em 0',
-          width: '100%',
-          padding: '1em 0',
+          margin: '1em auto',
+          padding: '0.5em',
+          width: '50%',
+          display: 'block',
+        }}
+      />
+      <div
+        style={{
           display: 'flex',
+          flexWrap: 'wrap',
           justifyContent: 'center',
+          gap: '1em',
+          marginTop: '1em',
         }}
       >
-        <input
-          type='text'
-          style={{ width: '40%', padding: '1em' }}
-          value={search}
-          onChange={handleSearch}
-          placeholder='Search for Countries'
-        />
+        {filteredCountries.map((country) => (
+          <CountryCard
+            key={country.cca2}
+            name={country.name.common}
+            flag={country.flags.svg || country.flags.png}
+          />
+        ))}
       </div>
-
-      {isLoading ? (
-        <div>Loading...</div>
-      ) : error ? (
-        <div>Error: {error}</div>
-      ) : filteredCountries.length > 0 || countries.length > 0 ? (
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            gap: '1em',
-            padding: '1em',
-          }}
-        >
-          {(filteredCountries.length > 0 ? filteredCountries : countries).map(
-            (country) => (
-              <Country
-                key={country.cca2}
-                flag={country.flags?.svg || country.flags?.png}
-                name={country.name.common}
-                abbr={country.cca2}
-              />
-            )
-          )}
-        </div>
-      ) : (
-        <div>No countries found</div> // Fallback message
-      )}
     </div>
   );
 };
