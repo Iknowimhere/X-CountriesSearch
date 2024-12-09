@@ -7,6 +7,7 @@ export const Countries = () => {
   const [filteredCountries, setFilteredCountries] = useState([]);
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleSearch = (e) => {
     const value = e.target.value;
@@ -16,38 +17,39 @@ export const Countries = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
-    }, 300); // Reduced debounce time for testing
+    }, 500); // Debounce for user input
     return () => clearTimeout(timer);
   }, [search]);
-  // Add loading state
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Update fetch effect
   useEffect(() => {
     const fetchCountries = async () => {
       setIsLoading(true);
       try {
+        let response;
         if (debouncedSearch) {
-          const response = await fetch(
+          response = await fetch(
             `https://restcountries.com/v3.1/name/${debouncedSearch}`
           );
-          if (!response.ok) {
+          if (response.ok) {
+            const data = await response.json();
+            setFilteredCountries(data.slice(0, 3)); // Limit to 3 results
+          } else {
             setFilteredCountries([]);
-            return;
           }
-          const data = await response.json();
-          setFilteredCountries(data);
         } else {
-          const response = await fetch('https://restcountries.com/v3.1/all');
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
+          response = await fetch('https://restcountries.com/v3.1/all');
+          if (response.ok) {
+            const data = await response.json();
+            setCountries(data);
+            setFilteredCountries(data); // Display all countries by default
+          } else {
+            throw new Error('Failed to fetch countries');
           }
-          const data = await response.json();
-          setCountries(data);
-          setFilteredCountries([]);
         }
+        setError(null);
       } catch (err) {
         console.error('Error fetching countries:', err);
+        setError(err.message);
         setFilteredCountries([]);
       } finally {
         setIsLoading(false);
@@ -73,13 +75,15 @@ export const Countries = () => {
           type='text'
           style={{ width: '40%', padding: '1em' }}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={handleSearch}
           placeholder='Search for Countries'
         />
       </div>
 
       {isLoading ? (
         <div>Loading...</div>
+      ) : error ? (
+        <div>Error: {error}</div>
       ) : (
         <div
           style={{
