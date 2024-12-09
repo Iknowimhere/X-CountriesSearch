@@ -18,21 +18,29 @@ export const Countries = () => {
 
 
   useEffect(() => {
-    if (debouncedSearch) {
-      fetch(filteredCountriesApi)
-        .then((res) => res.json())
-        .then((data) => {
+
+
+    // Choose the appropriate URL based on the search term
+    const url = debouncedSearch ? filteredCountriesApi : api;
+
+
+    fetch(url)
+      .then((res) => {
+        if (!res.ok && !res.status === 200) {
+          throw new Error('Network response was not ok');
+        }
+        return res.json()
+      })
+      .then((data) => {
+        if (debouncedSearch) {
           const matchedCountries = data.filter((country) => country.name.common.toLowerCase().includes(debouncedSearch.toLowerCase()));
           setFilteredCountries(matchedCountries)
-        }).catch((err) => console.log('Error fetching filtered Countries', err))
-    } else {
-      setFilteredCountries([]);
-      fetch(api)
-        .then((res) => res.json())
-        .then((data) => {
+        } else {
           setCountries(data)
-        }).catch((err) => console.log('Error fetching Countries', err))
-    }
+        }
+      }).catch((err) => {
+        console.log('Error fetching filtered Countries', err)
+      })
   }, [debouncedSearch]);
 
   const countriesToDisplay = filteredCountries.length > 0 ? filteredCountries : countries;
@@ -52,7 +60,7 @@ export const Countries = () => {
           textAlign: 'center',
         }}
       >
-        {countriesToDisplay.map((country) => (
+        {countriesToDisplay?.map((country) => (
           <Country
             key={country.name.common}
             flag={country.flags.svg}
