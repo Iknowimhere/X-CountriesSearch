@@ -13,54 +13,49 @@ export const Countries = () => {
     setSearch(value);
   };
 
-  const api = 'https://restcountries.com/v3.1/all';
-
-  // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
-    }, 400);
+    }, 300); // Reduced debounce time for testing
     return () => clearTimeout(timer);
   }, [search]);
+  // Add loading state
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch countries
-  // Update the useEffect for API calls
+  // Update fetch effect
   useEffect(() => {
     const fetchCountries = async () => {
+      setIsLoading(true);
       try {
         if (debouncedSearch) {
           const response = await fetch(
             `https://restcountries.com/v3.1/name/${debouncedSearch}`
           );
-          const data = await response.json();
-          if (response.ok) {
-            const matchedCountries = data.filter((country) =>
-              country.name.common
-                .toLowerCase()
-                .includes(debouncedSearch.toLowerCase())
-            );
-            setFilteredCountries(matchedCountries);
-          } else {
+          if (!response.ok) {
             setFilteredCountries([]);
+            return;
           }
+          const data = await response.json();
+          setFilteredCountries(data);
         } else {
-          const response = await fetch(api);
-          const data = await response.json();
-          if (response.ok) {
-            setCountries(data);
-            setFilteredCountries([]);
+          const response = await fetch('https://restcountries.com/v3.1/all');
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
           }
+          const data = await response.json();
+          setCountries(data);
+          setFilteredCountries([]);
         }
       } catch (err) {
         console.error('Error fetching countries:', err);
         setFilteredCountries([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchCountries();
   }, [debouncedSearch]);
-
-  const displayedCountries = search ? filteredCountries : countries;
 
   return (
     <div className='countries-container'>
@@ -78,35 +73,35 @@ export const Countries = () => {
           type='text'
           style={{ width: '40%', padding: '1em' }}
           value={search}
-          onChange={handleSearch}
+          onChange={(e) => setSearch(e.target.value)}
           placeholder='Search for Countries'
-          data-testid='country-search'
         />
       </div>
 
-      {error && (
-        <div style={{ textAlign: 'center', color: 'red' }}>{error}</div>
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : (
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            gap: '1em',
+            padding: '1em',
+          }}
+        >
+          {(filteredCountries.length > 0 ? filteredCountries : countries).map(
+            (country) => (
+              <Country
+                key={country.cca2}
+                flag={country.flags.svg}
+                name={country.name.common}
+                abbr={country.cca2}
+              />
+            )
+          )}
+        </div>
       )}
-
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          gap: '1em',
-          alignItems: 'center',
-          textAlign: 'center',
-        }}
-      >
-        {displayedCountries.map((country) => (
-          <Country
-            key={country.cca2}
-            flag={country.flags.svg}
-            name={country.name.common}
-            abbr={country.cca2}
-          />
-        ))}
-      </div>
     </div>
   );
 };
