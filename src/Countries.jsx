@@ -16,7 +16,7 @@ export const Countries = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(search);
+      setDebouncedSearch(search.trim());
     }, 500); // Debounce for user input
     return () => clearTimeout(timer);
   }, [search]);
@@ -32,6 +32,7 @@ export const Countries = () => {
           );
           if (response.ok) {
             const data = await response.json();
+            console.log('Search Results:', data); // Debugging log
             setFilteredCountries(data.slice(0, 3)); // Limit to 3 results
           } else {
             setFilteredCountries([]);
@@ -40,6 +41,7 @@ export const Countries = () => {
           response = await fetch('https://restcountries.com/v3.1/all');
           if (response.ok) {
             const data = await response.json();
+            console.log('All Countries:', data); // Debugging log
             setCountries(data);
             setFilteredCountries(data); // Display all countries by default
           } else {
@@ -84,7 +86,7 @@ export const Countries = () => {
         <div>Loading...</div>
       ) : error ? (
         <div>Error: {error}</div>
-      ) : (
+      ) : filteredCountries.length > 0 || countries.length > 0 ? (
         <div
           style={{
             display: 'flex',
@@ -98,13 +100,15 @@ export const Countries = () => {
             (country) => (
               <Country
                 key={country.cca2}
-                flag={country.flags.svg}
+                flag={country.flags?.svg || country.flags?.png}
                 name={country.name.common}
                 abbr={country.cca2}
               />
             )
           )}
         </div>
+      ) : (
+        <div>No countries found</div> // Fallback message
       )}
     </div>
   );
