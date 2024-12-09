@@ -5,32 +5,53 @@ export const Countries = () => {
   const [countries, setCountries] = useState([]);
   const [search, setSearch] = useState('');
   const [filteredCountries, setFilteredCountries] = useState([]);
-  
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const api = 'https://restcountries.com/v3.1/all';
-  const filteredCountriesApi = `https://restcountries.com/v3.1/name/${search}`;
+  // const filteredCountriesApi = `https://restcountries.com/v3.1/name/${search}`;
 
-  // Fetching countries when the component loads or when search changes
+
+  // Debounce the search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500); // Adjust debounce delay as needed
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  let filteredCountriesApi = `https://restcountries.com/v3.1/name/${debouncedSearch}`;
   useEffect(() => {
     if (search.length > 0) {
       // Fetch countries based on search query
       fetch(filteredCountriesApi)
-        .then((res) => res.json())
-        .then((data) => setFilteredCountries(data))
+        .then((res) => {
+          if (!res.ok && !res.status === 200) {
+            throw new Error("Network response was not ok");
+          }
+          return res.json()
+        })
+        .then((data) => {
+            const matchedCountries = data.filter((country) =>
+              country.name.common.toLowerCase().includes(debouncedSearch.toLowerCase())
+            );
+            setFilteredCountries(matchedCountries); // Set the filtered countries
+        })
         .catch((err) => {
           console.error("Error fetching countries:", err);
-          // You can add additional error state handling if necessary
         });
     } else {
-      // Fetch all countries if no search term
       fetch(api)
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok && !res.status === 200) {
+            throw new Error("Network response was not ok");
+          }
+          return res.json()
+        })
         .then((data) => setCountries(data))
         .catch((err) => {
           console.error("Error fetching countries:", err);
-          // You can add additional error state handling if necessary
         });
     }
-  }, [search]); // Dependency on search state
+  }, [debouncedSearch]); // Dependency on search state
 
   return (
     <div className='countries-container'>

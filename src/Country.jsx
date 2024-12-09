@@ -14,6 +14,7 @@ export const Country = ({ flag, name, abbr }) => {
         width: '200px',
       }}
       className="countryCard"
+      data-country={name}  // Add data attribute for easier selection in tests
     >
       <img src={flag} alt={`Flag of ${name}`} height={100} width={100} />
       <h2>{name}</h2>
