@@ -6,57 +6,62 @@ export const Countries = () => {
   const [search, setSearch] = useState('');
   const [filteredCountries, setFilteredCountries] = useState([]);
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [error, setError] = useState(null);
+  
   const api = 'https://restcountries.com/v3.1/all';
-  // const filteredCountriesApi = `https://restcountries.com/v3.1/name/${search}`;
 
-
-  // Debounce the search input
+  // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
-    }, 500); // Adjust debounce delay as needed
+    }, 500);
     return () => clearTimeout(timer);
   }, [search]);
 
-  let filteredCountriesApi = `https://restcountries.com/v3.1/name/${debouncedSearch}`;
+  // Fetch countries
   useEffect(() => {
-    if (search.length > 0) {
-      // Fetch countries based on search query
-      fetch(filteredCountriesApi)
-        .then((res) => {
-          if (!res.ok && !res.status === 200) {
-            throw new Error("Network response was not ok");
+    const fetchCountries = async () => {
+      try {
+        if (debouncedSearch) {
+          const response = await fetch(`https://restcountries.com/v3.1/name/${debouncedSearch}`);
+          if (!response.ok) {
+            setFilteredCountries([]);
+            throw new Error('No countries found');
           }
-          return res.json()
-        })
-        .then((data) => {
-            const matchedCountries = data.filter((country) =>
-              country.name.common.toLowerCase().includes(debouncedSearch.toLowerCase())
-            );
-            setFilteredCountries(matchedCountries); // Set the filtered countries
-        })
-        .catch((err) => {
-          console.error("Error fetching countries:", err);
-        });
-    } else {
-      fetch(api)
-        .then((res) => {
-          if (!res.ok && !res.status === 200) {
-            throw new Error("Network response was not ok");
+          const data = await response.json();
+          const matchedCountries = data.filter(country =>
+            country.name.common.toLowerCase().includes(debouncedSearch.toLowerCase())
+          );
+          setFilteredCountries(matchedCountries);
+        } else {
+          const response = await fetch(api);
+          if (!response.ok) {
+            throw new Error('Failed to fetch countries');
           }
-          return res.json()
-        })
-        .then((data) => setCountries(data))
-        .catch((err) => {
-          console.error("Error fetching countries:", err);
-        });
-    }
-  }, [debouncedSearch]); // Dependency on search state
+          const data = await response.json();
+          setCountries(data);
+          setFilteredCountries([]);
+        }
+      } catch (err) {
+        console.error('Error fetching countries:', err);
+        setError(err.message);
+      }
+    };
+
+    fetchCountries();
+  }, [debouncedSearch]);
+
+  const displayedCountries = filteredCountries.length > 0 ? filteredCountries : countries;
 
   return (
     <div className='countries-container'>
-      {/* Search input field */}
-      <div className="search" style={{ margin: '2em 0', width: '100%', padding: '1em 0', display: 'flex', justifyContent: 'center' }}>
+      <div className="search" style={{ 
+        margin: '2em 0', 
+        width: '100%', 
+        padding: '1em 0', 
+        display: 'flex', 
+        justifyContent: 'center' 
+      }}>
         <input
           type="text"
           style={{ width: '40%', padding: '1em' }}
@@ -66,18 +71,15 @@ export const Countries = () => {
         />
       </div>
 
-      {/* Displaying the countries or filtered countries */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          gap: '1em',
-          alignItems: 'center',
-          textAlign: 'center',
-        }}
-      >
-        {(filteredCountries.length > 0 ? filteredCountries : countries).map((country) => (
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: '1em',
+        alignItems: 'center',
+        textAlign: 'center',
+      }}>
+        {displayedCountries.map((country) => (
           <Country
             key={country.name.common}
             flag={country.flags.svg}
@@ -86,6 +88,8 @@ export const Countries = () => {
           />
         ))}
       </div>
+
+      {error && <div className="error-message">{error}</div>}
     </div>
   );
 };

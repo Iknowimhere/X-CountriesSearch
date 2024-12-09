@@ -1,6 +1,7 @@
 export const Country = ({ flag, name, abbr }) => {
   return (
     <div
+      className="countryCard"
       style={{
         display: 'flex',
         justifyContent: 'center',
@@ -13,10 +14,14 @@ export const Country = ({ flag, name, abbr }) => {
         height: '200px',
         width: '200px',
       }}
-      className="countryCard"
-      data-country={name}  // Add data attribute for easier selection in tests
+      data-country={name}
     >
-      <img src={flag} alt={`Flag of ${name}`} height={100} width={100} />
+      <img 
+        src={flag} 
+        alt={`Flag of ${name}`} 
+        height={100} 
+        width={100} 
+      />
       <h2>{name}</h2>
     </div>
   );
