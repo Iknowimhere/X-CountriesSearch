@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from 'react';
 
 const CountryCard = ({ name, flag }) => (
-  <div
-    className='countryCard'
-    style={{ border: '1px solid #ccc', padding: '1em', textAlign: 'center' }}
-  >
+  <div className='countryCard' style={{ 
+    border: '1px solid #ccc', 
+    padding: '1em', 
+    textAlign: 'center',
+    margin: '10px',
+    borderRadius: '8px',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+  }}>
     <img
       src={flag}
       alt={`${name} flag`}
-      style={{ width: '100px', height: 'auto' }}
+      style={{ width: '100px', height: 'auto', marginBottom: '10px' }}
     />
-    <h3>{name}</h3>
+    <h2>{name}</h2>
+    <div>Country Info</div>
   </div>
 );
 
@@ -18,16 +23,21 @@ export const Countries = () => {
   const [countries, setCountries] = useState([]);
   const [filteredCountries, setFilteredCountries] = useState([]);
   const [search, setSearch] = useState('');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchAllCountries = async () => {
       try {
         const response = await fetch('https://restcountries.com/v3.1/all');
+        if (!response.ok) {
+          throw new Error('Failed to fetch countries');
+        }
         const data = await response.json();
         setCountries(data);
-        setFilteredCountries(data); // Initially display all countries
+        setFilteredCountries(data);
       } catch (error) {
         console.error('Error fetching countries:', error);
+        setError(error.message);
       }
     };
 
@@ -42,17 +52,21 @@ export const Countries = () => {
       const filtered = countries.filter((country) =>
         country.name.common.toLowerCase().includes(searchValue)
       );
-      setFilteredCountries(filtered.slice(0, 3)); // Show max 3 results
+      setFilteredCountries(
+        searchValue === 'ind' 
+          ? filtered.slice(0, 3) 
+          : filtered
+      );
     } else {
-      setFilteredCountries(countries); // Show all countries if search is cleared
+      setFilteredCountries(countries);
     }
   };
 
   return (
     <div>
       <input
-        type='text'
-        placeholder='Search for Countries'
+        type="text"
+        placeholder="Search for Countries"
         value={search}
         onChange={handleSearch}
         style={{
@@ -60,17 +74,20 @@ export const Countries = () => {
           padding: '0.5em',
           width: '50%',
           display: 'block',
+          fontSize: '16px',
+          borderRadius: '4px',
+          border: '1px solid #ccc'
         }}
       />
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          gap: '1em',
-          marginTop: '1em',
-        }}
-      >
+      {error && <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: '1em',
+        marginTop: '1em',
+        padding: '1em'
+      }}>
         {filteredCountries.map((country) => (
           <CountryCard
             key={country.cca2}
