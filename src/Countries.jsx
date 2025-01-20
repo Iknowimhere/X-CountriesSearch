@@ -36,7 +36,7 @@ export const Countries = () => {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await fetch('https://xcountriesapi.onrender.com/all/');
+        const response = await fetch('https://restcountries.com/v3.1/all');
         if (!response.ok) throw new Error('Failed to fetch countries');
         const data = await response.json();
         setCountries(data);
