@@ -21,7 +21,6 @@ const CountryCard = ({ name, flag }) => (
       style={{ width: '120px', height: '80px', marginBottom: '10px' }}
     />
     <h2 style={{ fontSize: '1.2em', margin: '10px 0' }}>{name}</h2>
-    <div>Country Details</div>
   </div>
 );
 
@@ -36,7 +35,9 @@ export const Countries = () => {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await fetch('https://restcountries.com/v3.1/all');
+        const response = await fetch(
+          ' https://countries-search-data-prod-812920491762.asia-south1.run.app/countries'
+        );
         if (!response.ok) throw new Error('Failed to fetch countries');
         const data = await response.json();
         setCountries(data);
@@ -55,7 +56,7 @@ export const Countries = () => {
     setSearch(searchValue);
 
     const filtered = countries.filter((country) =>
-      country.name.common.toLowerCase().includes(searchValue)
+      country.common.toLowerCase().includes(searchValue)
     );
 
     setFilteredCountries(
@@ -94,9 +95,9 @@ export const Countries = () => {
       >
         {filteredCountries.map((country) => (
           <CountryCard
-            key={country.cca3}
-            name={country.name.common}
-            flag={country.flags.svg || country.flags.png}
+            key={country.png}
+            name={country.common}
+            flag={country.png}
           />
         ))}
       </div>
