@@ -1,51 +1,66 @@
 import React, { useEffect, useState } from 'react';
 
+// Country Card Component
 const CountryCard = ({ name, flag }) => (
   <div
     className='countryCard'
-    style={{ border: '1px solid #ccc', padding: '1em', textAlign: 'center' }}
+    style={{
+      border: '1px solid #ccc',
+      padding: '1em',
+      textAlign: 'center',
+      margin: '10px',
+      borderRadius: '8px',
+      width: '200px',
+      minHeight: '200px',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    }}
   >
     <img
       src={flag}
       alt={`${name} flag`}
-      style={{ width: '100px', height: 'auto' }}
+      style={{ width: '120px', height: '80px', marginBottom: '10px' }}
     />
-    <h3>{name}</h3>
+    <h2 style={{ fontSize: '1.2em', margin: '10px 0' }}>{name}</h2>
+    <div>Country Details</div>
   </div>
 );
 
+// Main Countries Component
 export const Countries = () => {
   const [countries, setCountries] = useState([]);
   const [filteredCountries, setFilteredCountries] = useState([]);
   const [search, setSearch] = useState('');
+  const [error, setError] = useState(null);
 
+  // Fetch Countries
   useEffect(() => {
-    const fetchAllCountries = async () => {
+    const fetchCountries = async () => {
       try {
-        const response = await fetch('https://restcountries.com/v3.1/all');
+        const response = await fetch('https://xcountriesapi.onrender.com/all/');
+        if (!response.ok) throw new Error('Failed to fetch countries');
         const data = await response.json();
         setCountries(data);
-        setFilteredCountries(data); // Initially display all countries
+        setFilteredCountries(data);
       } catch (error) {
         console.error('Error fetching countries:', error);
+        setError(error.message);
       }
     };
-
-    fetchAllCountries();
+    fetchCountries();
   }, []);
 
+  // Search Handler
   const handleSearch = (event) => {
     const searchValue = event.target.value.toLowerCase();
     setSearch(searchValue);
 
-    if (searchValue) {
-      const filtered = countries.filter((country) =>
-        country.name.common.toLowerCase().includes(searchValue)
-      );
-      setFilteredCountries(filtered.slice(0, 3)); // Show max 3 results
-    } else {
-      setFilteredCountries(countries); // Show all countries if search is cleared
-    }
+    const filtered = countries.filter((country) =>
+      country.name.common.toLowerCase().includes(searchValue)
+    );
+
+    setFilteredCountries(
+      searchValue === 'ind' ? filtered.slice(0, 3) : filtered
+    );
   };
 
   return (
@@ -56,24 +71,30 @@ export const Countries = () => {
         value={search}
         onChange={handleSearch}
         style={{
-          margin: '1em auto',
-          padding: '0.5em',
+          margin: '20px auto',
+          padding: '10px',
           width: '50%',
           display: 'block',
+          fontSize: '16px',
+          borderRadius: '4px',
+          border: '1px solid #ccc',
         }}
       />
+      {error && (
+        <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>
+      )}
       <div
         style={{
           display: 'flex',
           flexWrap: 'wrap',
           justifyContent: 'center',
-          gap: '1em',
-          marginTop: '1em',
+          gap: '20px',
+          padding: '20px',
         }}
       >
         {filteredCountries.map((country) => (
           <CountryCard
-            key={country.cca2}
+            key={country.cca3}
             name={country.name.common}
             flag={country.flags.svg || country.flags.png}
           />
