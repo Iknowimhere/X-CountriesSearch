@@ -35,9 +35,7 @@ export const Countries = () => {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await fetch(
-          ' https://countries-search-data-prod-812920491762.asia-south1.run.app/countries'
-        );
+        const response = await fetch('https://restcountries.com/v3.1/all');
         if (!response.ok) throw new Error('Failed to fetch countries');
         const data = await response.json();
         setCountries(data);
@@ -56,7 +54,7 @@ export const Countries = () => {
     setSearch(searchValue);
 
     const filtered = countries.filter((country) =>
-      country.common.toLowerCase().includes(searchValue)
+      country.name.common.toLowerCase().includes(searchValue)
     );
 
     setFilteredCountries(
@@ -95,9 +93,9 @@ export const Countries = () => {
       >
         {filteredCountries.map((country) => (
           <CountryCard
-            key={country.png}
-            name={country.common}
-            flag={country.png}
+            key={country.name.common}
+            name={country.name.common}
+            flag={country.flags.png || country.flags.svg}
           />
         ))}
       </div>
